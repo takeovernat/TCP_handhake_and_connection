@@ -192,7 +192,7 @@ int start_shell()
 
   directory = (char*) malloc(sizeof(char) * 1024);
 
-  if (!strcmp(input, "yes")) {
+  if (!strcmp(input, "y")) {
 
     getchar();
     printf("Type your customized shell prompt: ");
