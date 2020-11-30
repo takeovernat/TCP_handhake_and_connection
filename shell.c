@@ -1,6 +1,28 @@
 
 #include "shell.h"
 
+/********************************************************************/
+
+void print_address()
+{
+
+    char add[1024];
+    getcwd(add, sizeof(add));
+    printf("%s", add);
+}
+
+void get_directory() {
+  printf("%s: ", directory);
+}
+void command_cd(char* path) {
+
+  if( chdir(path) == -1)
+    printf("cd: %s: No such file or directory\n", path);
+
+}
+
+/********************************************************************/
+
 int stack_instructions(Alias* alias, char* input)
 {
 
@@ -71,17 +93,51 @@ int is_own_commmand(char* input)
     }
     split = strtok(NULL, ";");
   }
+
+
+  if (flag == 0) {
+
+    strcpy(temp, input);
+    split = strtok(temp, " ");
+    if (split != NULL) {
+
+      if (!strcmp(split, "cd")) {
+        split =  strtok(NULL, " ");
+        if (split == NULL) {
+          char*  home_user;
+          home_user = (char*) malloc(sizeof(char) * 1024);
+          strcpy(home_user, "/home/");
+          strcat(home_user, getenv("USER"));
+          command_cd(home_user);
+        }
+
+        else
+          command_cd(split);
+        flag = 2;
+      }
+
+      else if(!strcmp(split, "pwd")) {
+
+        print_address();
+        printf("\n");
+        flag = 2;
+      }
+    }
+
+  }
+
+
   return flag;
 }
 
 void execute_exit()
 {
-
   /*
     Function to finish the execution of the program
   */
   exit(EXIT_SUCCESS);
 }
+
 
 void execute(Alias* alias, char* input, int stack)
 {
@@ -89,7 +145,9 @@ void execute(Alias* alias, char* input, int stack)
   /*
     Function to execute a command
   */
-  
+  signal(SIGINT, signalhandlerC);
+  signal(SIGTSTP, signalhandlerZ);
+
   int ans;
 
   ans = is_alias(alias, input, " ");
@@ -115,6 +173,7 @@ void execute(Alias* alias, char* input, int stack)
   }
 }
 
+
 int start_shell()
 {
 
@@ -125,13 +184,39 @@ int start_shell()
   alias = (Alias*) malloc(sizeof(Alias));
   alias->n_list = 0;
   int ans;
+  prompt = 0, cant = 0;
   /*********************************************************/
+  initialize_shell();
+  printf("Do you want to customize your shell prompt for extra credit (Type y for yes): ");
+  scanf("%s", input);
+
+  directory = (char*) malloc(sizeof(char) * 1024);
+
+  if (!strcmp(input, "yes")) {
+
+    getchar();
+    printf("Type your customized shell prompt: ");
+    fgets(directory, 1024, stdin);
+    directory[strlen(directory) - 1] = '\0';
+
+  }
+  else {
+
+    getchar();
+    strcpy(directory, "prompt");
+  }
+
 
   while (1) {
 
-    printf("\n$ ");
+    get_directory();
     fgets(input, MAX_COMMAND_INPUT, stdin);
     input[strlen(input) - 1] = '\0';
+    n_stop = 1;
+    strcpy(correct_command, input);
+    if (strcmp(input, "cd") == 0)
+      chdir(input);
+
 
     ans = stack_instructions(alias, input);
     if (ans == 0)
@@ -139,9 +224,10 @@ int start_shell()
 
     else {
 
-    }
 
+    }
   }
 
+  start_shell();
   return 0;
 }

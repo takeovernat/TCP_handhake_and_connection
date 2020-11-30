@@ -1,4 +1,3 @@
-//ss2165
 #include "alias.h"
 
 void display_help_alias()
